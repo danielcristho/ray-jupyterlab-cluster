@@ -1,0 +1,20 @@
+version: "3.3"
+services:
+
+  jupyterhub:
+    container_name: 'jupyterhub'
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      PYTHONUNBUFFERED: 1
+      JUPYTERHUB_IP: ${JUPYTERHUB_IP}
+      JUPYTERHUB_PORT: ${JUPYTERHUB_PORT}
+      JUPYTERHUB_CONTAINER_NAME: ${JUPYTERHUB_CONTAINER_NAME}
+      JUPYTERHUB_DATA: ${JUPYTERHUB_DATA}
+      ADMIN_USERS: ${ADMIN_USERS}
+    volumes:
+      - "${JUPYTERHUB_DATA}:${JUPYTERHUB_DATA}"
+      - ${JUPYTERHUB_USERS_HOME}:/home
+    network_mode: host
+    restart: always
