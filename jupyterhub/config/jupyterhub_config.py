@@ -21,10 +21,26 @@ c.JupyterHub.admin_access = True
 Resource management, menggunakan Docker spawner.
 Mengatur batas CPU dan Memori untuk setiap container Docker
 """
-c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
 
-c.DockerSpawner.cpu_limit = 1  # Maksimum 1 CPU core per user
-c.DockerSpawner.mem_limit = '2G'  # Maksimum 2GB RAM per user
+c.DockerSpawner.mem_limit = '1G'
+c.DockerSpawner.cpu_limit = 1.0
+
+# c.DockerSpawner.host_url = 'unix://var/run/docker.sock'
+
+# c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
+
+# c.DockerSpawner.cpu_limit = 1  # Maksimum 1 CPU core per user
+# c.DockerSpawner.mem_limit = '2G'  # Maksimum 2GB RAM per user
+
+"""
+User management
+"""
+c.LocalAuthenticator.create_system_users=True
+
+"""
+Monitoring
+"""
+c.JupyterHub.authenticate_prometheus = False
 
 # c.JupyterHub.authenticator_class = "oauthenticator.LocalGitHubOAuthenticator"
 # c.LocalGitHubOAuthenticator.create_system_users = True
@@ -42,3 +58,4 @@ c.DockerSpawner.mem_limit = '2G'  # Maksimum 2GB RAM per user
 # #    print("Cleaning up proxy pid file")
 # #    os.remove(proxy_pid_file)
 # #c.ConfigurableHTTPProxy.pid_file = proxy_pid_file
+

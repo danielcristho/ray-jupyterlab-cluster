@@ -1,2 +1,4 @@
 jupyter
+dockerspawner
+# jupyterhub-dockerspawner
 oauthenticator[github]

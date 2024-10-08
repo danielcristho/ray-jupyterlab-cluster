@@ -1,4 +1,4 @@
-FROM jupyterhub/jupyterhub:4.1
+FROM jupyterhub/jupyterhub:3.1
 
 RUN apt-get update \
     && apt-get install -y gcc  python3-dev git \

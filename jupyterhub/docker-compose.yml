@@ -1,20 +1,95 @@
-version: "3.3"
+version: '3.8'
+
 services:
 
   jupyterhub:
-    container_name: 'jupyterhub'
+    container_name: jupyterhub
+    restart: unless-stopped
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/jupyterhub.dockerfile
     environment:
       PYTHONUNBUFFERED: 1
       JUPYTERHUB_IP: ${JUPYTERHUB_IP}
       JUPYTERHUB_PORT: ${JUPYTERHUB_PORT}
-      JUPYTERHUB_CONTAINER_NAME: ${JUPYTERHUB_CONTAINER_NAME}
-      JUPYTERHUB_DATA: ${JUPYTERHUB_DATA}
       ADMIN_USERS: ${ADMIN_USERS}
+    ports:
+      - 10003:10003
+    networks:
+      monitoring_hub:
+        ipv4_address: 10.10.1.10
     volumes:
-      - "${JUPYTERHUB_DATA}:${JUPYTERHUB_DATA}"
-      - ${JUPYTERHUB_USERS_HOME}:/home
-    network_mode: host
-    restart: always
+      - "jupyterhub_data:/data"
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    container_name: prometheus
+    command:
+      - --storage.tsdb.retention.time=7d
+      - --config.file=/etc/prometheus/prometheus.yml
+    # depends_on:
+    #   - node-exporter
+    ports:
+      - 9090:9090
+    volumes:
+      - '/host/proc:/path.procfs'
+      - '/host/sys:/path.sysfs'
+      - '/:/host:ro'
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      monitoring_hub:
+        ipv4_address: 10.10.1.11
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      monitoring_hub:
+        ipv4_address: 10.10.1.12
+  # node-exporter:
+  #   image: prom/node-exporter:latest
+  #   container_name: node-exporter
+  #   restart: unless-stopped
+  #   volumes:
+  #     - /proc:/host/proc:ro
+  #     - /sys:/host/sys:ro
+  #     - /:/rootfs:ro
+  #   command:
+  #     - '--path.procfs=/host/proc'
+  #     - '--path.rootfs=/rootfs'
+  #     - '--path.sysfs=/host/sys'
+  #     - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+  #   networks:
+  #     - monitoring_hub
+
+  # cadvisor:
+  #   image: gcr.io/cadvisor/cadvisor:latest
+  #   container_name: cadvisor
+  #   restart: unless-stopped
+  #   privileged: true
+  #   volumes:
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:ro
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
+  #     - /dev/disk/:/dev/disk:ro
+  #   networks:
+  #     - monitoring_hub
+
+networks:
+    monitoring_hub:
+        ipam:
+            config:
+                - subnet: 10.10.1.0/24
+        external: false
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  jupyterhub_data:
