@@ -1,4 +1,5 @@
-jupyter
+# jupyter
 dockerspawner
 # jupyterhub-dockerspawner
-oauthenticator[github]
+jupyterhub-nativeauthenticator
+# oauthenticator[github]

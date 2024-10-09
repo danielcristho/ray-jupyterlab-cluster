@@ -1,25 +1,41 @@
-version: '3.8'
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
+# JupyterHub docker compose configuration file
+version: "3"
 
 services:
-
-  jupyterhub:
-    container_name: jupyterhub
-    restart: unless-stopped
+  hub:
     build:
       context: .
-      dockerfile: docker/jupyterhub.dockerfile
-    environment:
-      PYTHONUNBUFFERED: 1
-      JUPYTERHUB_IP: ${JUPYTERHUB_IP}
-      JUPYTERHUB_PORT: ${JUPYTERHUB_PORT}
-      ADMIN_USERS: ${ADMIN_USERS}
+      dockerfile: ./docker/Dockerfile.jupyterhub
+      args:
+        JUPYTERHUB_VERSION: latest
+    restart: always
+    image: jupyterhub
+    container_name: jupyterhub
     ports:
-      - 10003:10003
+      - "8000:8000"
+    environment:
+      # This username will be a JupyterHub admin
+      JUPYTERHUB_ADMIN: admin
+      # All containers will join this network
+      DOCKER_NETWORK_NAME: jupyterhub-network
+      # JupyterHub will spawn this Notebook image for users
+      DOCKER_NOTEBOOK_IMAGE: quay.io/jupyter/base-notebook:latest
+      # Notebook directory inside user image
+      DOCKER_NOTEBOOK_DIR: /home/jovyan/work
     networks:
-      monitoring_hub:
-        ipv4_address: 10.10.1.10
+      - jupyterhub-network
     volumes:
-      - "jupyterhub_data:/data"
+      # The JupyterHub configuration file
+      - "./config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro"
+      # Bind Docker socket on the host so we can connect to the daemon from
+      # within the container
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+      # Bind Docker volume on host for JupyterHub database and cookie secrets
+      - "jupyterhub-data:/data"
+
   prometheus:
     image: prom/prometheus:latest
     restart: unless-stopped
@@ -38,8 +54,7 @@ services:
       - ./prometheus:/etc/prometheus
       - prometheus_data:/prometheus
     networks:
-      monitoring_hub:
-        ipv4_address: 10.10.1.11
+      - jupyterhub-network
 
   grafana:
     image: grafana/grafana:latest
@@ -50,46 +65,13 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
-      monitoring_hub:
-        ipv4_address: 10.10.1.12
-  # node-exporter:
-  #   image: prom/node-exporter:latest
-  #   container_name: node-exporter
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /proc:/host/proc:ro
-  #     - /sys:/host/sys:ro
-  #     - /:/rootfs:ro
-  #   command:
-  #     - '--path.procfs=/host/proc'
-  #     - '--path.rootfs=/rootfs'
-  #     - '--path.sysfs=/host/sys'
-  #     - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-  #   networks:
-  #     - monitoring_hub
-
-  # cadvisor:
-  #   image: gcr.io/cadvisor/cadvisor:latest
-  #   container_name: cadvisor
-  #   restart: unless-stopped
-  #   privileged: true
-  #   volumes:
-  #     - /:/rootfs:ro
-  #     - /var/run:/var/run:ro
-  #     - /sys:/sys:ro
-  #     - /var/lib/docker/:/var/lib/docker:ro
-  #     - /dev/disk/:/dev/disk:ro
-  #   networks:
-  #     - monitoring_hub
-
-networks:
-    monitoring_hub:
-        ipam:
-            config:
-                - subnet: 10.10.1.0/24
-        external: false
+      - jupyterhub-network
 
 volumes:
+  jupyterhub-data:
   prometheus_data:
   grafana_data:
-  jupyterhub_data:
+
+networks:
+  jupyterhub-network:
+    name: jupyterhub-network

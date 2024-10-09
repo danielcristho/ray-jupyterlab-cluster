@@ -7,7 +7,7 @@ scrape_configs:
   - job_name: 'jupyterhub'
     metrics_path: '/hub/metrics'
     static_configs:
-      - targets: ['10.10.1.10:10003']
+      - targets: ['172.26.0.2:8000']
 
   # - job_name: 'node-exporter'
   #   static_configs:

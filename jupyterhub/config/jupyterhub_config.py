@@ -1,21 +1,56 @@
-import os
-"""
-Set public interface
-"""
-c.JupyterHub.ip = os.environ["JUPYTERHUB_IP"]
-c.JupyterHub.port = int(os.environ["JUPYTERHUB_PORT"])
-c.JupyterHub.hub_connect_ip = os.environ["JUPYTERHUB_IP"]
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
 
-"""
-Jupyterhub auth settings. Using PAM
-"""
-admin_users = os.environ['ADMIN_USERS']
-print("Admin Users", admin_users)
-admin_users_set = set(filter(len, map(str.strip, admin_users.split(','))))
-print("Admin Users Set", admin_users_set)
-c.JupyterHub.authenticator_class = "jupyterhub.auth.PAMAuthenticator"
-c.Authenticator.admin_users = admin_users_set
-c.JupyterHub.admin_access = True
+# Configuration file for JupyterHub
+import os
+
+c = get_config()  # noqa: F821
+
+# We rely on environment variables to configure JupyterHub so that we
+# avoid having to rebuild the JupyterHub container every time we change a
+# configuration parameter.
+
+# Spawn single-user servers as Docker containers
+c.JupyterHub.spawner_class = "dockerspawner.DockerSpawner"
+
+# Spawn containers from this image
+c.DockerSpawner.image = os.environ["DOCKER_NOTEBOOK_IMAGE"]
+
+# Connect containers to this Docker network
+network_name = os.environ["DOCKER_NETWORK_NAME"]
+c.DockerSpawner.use_internal_ip = True
+c.DockerSpawner.network_name = network_name
+
+# Explicitly set notebook directory because we'll be mounting a volume to it.
+# Most `jupyter/docker-stacks` *-notebook images run the Notebook server as
+# user `jovyan`, and set the notebook directory to `/home/jovyan/work`.
+# We follow the same convention.
+notebook_dir = os.environ.get("DOCKER_NOTEBOOK_DIR", "/home/jovyan/work")
+c.DockerSpawner.notebook_dir = notebook_dir
+
+# Mount the real user's Docker volume on the host to the notebook user's
+# notebook directory in the container
+c.DockerSpawner.volumes = {"jupyterhub-user-{username}": notebook_dir}
+
+# Remove containers once they are stopped
+c.DockerSpawner.remove = True
+
+# For debugging arguments passed to spawned containers
+c.DockerSpawner.debug = True
+
+# User containers will access hub by container name on the Docker network
+c.JupyterHub.hub_ip = "jupyterhub"
+c.JupyterHub.hub_port = 8080
+
+# Persist hub data on volume mounted inside container
+c.JupyterHub.cookie_secret_file = "/data/jupyterhub_cookie_secret"
+c.JupyterHub.db_url = "sqlite:////data/jupyterhub.sqlite"
+
+# Allow all signed-up users to login
+c.Authenticator.allow_all = True
+
+# Authenticate users with Native Authenticator
+c.JupyterHub.authenticator_class = "nativeauthenticator.NativeAuthenticator"
 
 """
 Resource management, menggunakan Docker spawner.
@@ -25,37 +60,13 @@ Mengatur batas CPU dan Memori untuk setiap container Docker
 c.DockerSpawner.mem_limit = '1G'
 c.DockerSpawner.cpu_limit = 1.0
 
-# c.DockerSpawner.host_url = 'unix://var/run/docker.sock'
+# Allow anyone to sign-up without approval
+c.NativeAuthenticator.open_signup = True
 
-# c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
+# Allowed admins
+admin = os.environ.get("JUPYTERHUB_ADMIN")
+if admin:
+    c.Authenticator.admin_users = [admin]
 
-# c.DockerSpawner.cpu_limit = 1  # Maksimum 1 CPU core per user
-# c.DockerSpawner.mem_limit = '2G'  # Maksimum 2GB RAM per user
-
-"""
-User management
-"""
-c.LocalAuthenticator.create_system_users=True
-
-"""
-Monitoring
-"""
+# Allowed monitoring
 c.JupyterHub.authenticate_prometheus = False
-
-# c.JupyterHub.authenticator_class = "oauthenticator.LocalGitHubOAuthenticator"
-# c.LocalGitHubOAuthenticator.create_system_users = True
-# c.LocalGitHubOAuthenticator.allowed_users = admin_users_set
-# c.Authenticator.admin_users = admin_users_set
-# #c.JupyterHub.admin_access = True
-
-# ## mount a data location to persist login and user data
-# data_dir = os.environ['JUPYTERHUB_DATA']
-# c.JupyterHub.cookie_secret_file = os.path.join(data_dir, 'jupyterhub_cookie_secret')
-
-# ## remove proxy file as it gives error if it exists on container restart
-# #proxy_pid_file = "/var/run/jupyterhub-proxy.pid"
-# #if os.path.exists(proxy_pid_file):
-# #    print("Cleaning up proxy pid file")
-# #    os.remove(proxy_pid_file)
-# #c.ConfigurableHTTPProxy.pid_file = proxy_pid_file
-
