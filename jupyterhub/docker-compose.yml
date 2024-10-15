@@ -1,69 +1,78 @@
-# Copyright (c) Jupyter Development Team.
-# Distributed under the terms of the Modified BSD License.
-
-# JupyterHub docker compose configuration file
 version: "3"
 
 services:
-  hub:
+  admin:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile.jupyterhub
+      dockerfile: ./admin/docker/Dockerfile.jupyterhub
       args:
         JUPYTERHUB_VERSION: latest
     restart: always
     image: jupyterhub
-    container_name: jupyterhub
+    # container_name: jupyterhub
     ports:
       - "8000:8000"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
     environment:
-      # This username will be a JupyterHub admin
       JUPYTERHUB_ADMIN: admin
-      # All containers will join this network
       DOCKER_NETWORK_NAME: jupyterhub-network
-      # JupyterHub will spawn this Notebook image for users
       DOCKER_NOTEBOOK_IMAGE: quay.io/jupyter/base-notebook:latest
-      # Notebook directory inside user image
       DOCKER_NOTEBOOK_DIR: /home/jovyan/work
     networks:
       - jupyterhub-network
     volumes:
-      # The JupyterHub configuration file
-      - "./config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro"
-      # Bind Docker socket on the host so we can connect to the daemon from
-      # within the container
+      - "./admin/config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
-      # Bind Docker volume on host for JupyterHub database and cookie secrets
       - "jupyterhub-data:/data"
+
+  worker:
+    # build:
+    #   context: ./worker
+    #   dockerfile: Dockerfile
+    image: royyana/progjar-jupyter:latest
+    user: root
+    privileged: true
+    working_dir: /home/jovyan/work
+    deploy:
+      mode: global
+    environment:
+      - "GRANT_SUDO=yes"
+    volumes:
+      - ./work:/home/jovyan/work
+    networks:
+      - jupyterhub-network
 
   prometheus:
     image: prom/prometheus:latest
     restart: unless-stopped
-    container_name: prometheus
+    # container_name: prometheus
     command:
-      - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.time=30d
       - --config.file=/etc/prometheus/prometheus.yml
-    # depends_on:
-    #   - node-exporter
     ports:
       - 9090:9090
     volumes:
-      - '/host/proc:/path.procfs'
-      - '/host/sys:/path.sysfs'
-      - '/:/host:ro'
-      - ./prometheus:/etc/prometheus
+      - '/proc:/host/proc:ro'
+      - '/sys:/host/sys:ro'
+      - '/:/rootfs:ro'
+      - './admin/prometheus:/etc/prometheus'
       - prometheus_data:/prometheus
     networks:
       - jupyterhub-network
 
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
+    # container_name: grafana
     restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
     networks:
       - jupyterhub-network
 
@@ -74,4 +83,5 @@ volumes:
 
 networks:
   jupyterhub-network:
-    name: jupyterhub-network
+    driver: overlay
+    attachable: true

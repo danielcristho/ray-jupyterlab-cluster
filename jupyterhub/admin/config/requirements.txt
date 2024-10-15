@@ -1,5 +1,7 @@
 # jupyter
 dockerspawner
+batchspawner
 # jupyterhub-dockerspawner
 jupyterhub-nativeauthenticator
+jupyter-resource-usage
 # oauthenticator[github]

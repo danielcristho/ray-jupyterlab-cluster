@@ -39,7 +39,7 @@ c.DockerSpawner.remove = True
 c.DockerSpawner.debug = True
 
 # User containers will access hub by container name on the Docker network
-c.JupyterHub.hub_ip = "jupyterhub"
+c.JupyterHub.hub_ip = "127.0.0.1"
 c.JupyterHub.hub_port = 8080
 
 # Persist hub data on volume mounted inside container
@@ -59,6 +59,8 @@ Mengatur batas CPU dan Memori untuk setiap container Docker
 
 c.DockerSpawner.mem_limit = '1G'
 c.DockerSpawner.cpu_limit = 1.0
+
+c.ResourceUseDisplay.track_cpu_percent = True
 
 # Allow anyone to sign-up without approval
 c.NativeAuthenticator.open_signup = True
