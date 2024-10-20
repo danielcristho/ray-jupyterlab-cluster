@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  ray_head:
+    build: .
+    container_name: ray_head
+    command: >
+      /bin/bash -c "pip install jupyter && ray start --head --port=6379 --dashboard-host 0.0.0.0 && jupyter notebook --ip 0.0.0.0 --port=8888 --no-browser --allow-root && tail -f /dev/null"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    shm_size: 2gb
+    ports:
+      - "8888:8888"
+      - "6379:6379"
+      - "8265:8265"
+    volumes:
+      - ./workspace:/workspace
+
+  ray_worker_1:
+    build: .
+    container_name: ray_worker_1
+    command: >
+      /bin/bash -c "RAY_USE_MULTIPROCESSING_CPU_COUNT=1 ray start --address=ray_head:6379 && tail -f /dev/null"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - RAY_USE_MULTIPROCESSING_CPU_COUNT=1  # Add this environment variable
+    shm_size: 2gb
+    ports:
+      - "8889:8888"
+    volumes:
+      - ./workspace:/workspace
+
+  ray_worker_2:
+    build: .
+    container_name: ray_worker_2
+    command: >
+      /bin/bash -c "RAY_USE_MULTIPROCESSING_CPU_COUNT=1 ray start --address=ray_head:6379 && tail -f /dev/null"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - RAY_USE_MULTIPROCESSING_CPU_COUNT=1  # Add this environment variable
+    shm_size: 2gb
+    ports:
+      - "8890:8888"
+    volumes:
+      - ./workspace:/workspace
+
+  ray_worker_3:
+    build: .
+    container_name: ray_worker_3
+    command: >
+      /bin/bash -c "RAY_USE_MULTIPROCESSING_CPU_COUNT=1 ray start --address=ray_head:6379 && tail -f /dev/null"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - RAY_USE_MULTIPROCESSING_CPU_COUNT=1  # Add this environment variable
+    shm_size: 2gb
+    ports:
+      - "8891:8888"
+    volumes:
+      - ./workspace:/workspace
