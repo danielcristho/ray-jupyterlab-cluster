@@ -1,7 +1,11 @@
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
+# JupyterHub docker compose configuration file
 version: "3"
 
 services:
-  admin:
+  hub:
     build:
       context: .
       dockerfile: ./admin/docker/Dockerfile.jupyterhub
@@ -9,25 +13,28 @@ services:
         JUPYTERHUB_VERSION: latest
     restart: always
     image: jupyterhub
-    # container_name: jupyterhub
-    ports:
-      - "8000:8000"
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-    environment:
-      JUPYTERHUB_ADMIN: admin
-      DOCKER_NETWORK_NAME: jupyterhub-network
-      DOCKER_NOTEBOOK_IMAGE: quay.io/jupyter/base-notebook:latest
-      DOCKER_NOTEBOOK_DIR: /home/jovyan/work
+    container_name: jupyterhub
     networks:
       - jupyterhub-network
     volumes:
+      # The JupyterHub configuration file
       - "./admin/config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro"
+      # Bind Docker socket on the host so we can connect to the daemon from
+      # within the container
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
+      # Bind Docker volume on host for JupyterHub database and cookie secrets
       - "jupyterhub-data:/data"
-
+    ports:
+      - "8000:8000"
+    environment:
+      # This username will be a JupyterHub admin
+      JUPYTERHUB_ADMIN: admin
+      # All containers will join this network
+      DOCKER_NETWORK_NAME: jupyterhub-network
+      # JupyterHub will spawn this Notebook image for users
+      DOCKER_NOTEBOOK_IMAGE: quay.io/jupyter/base-notebook:latest
+      # Notebook directory inside user image
+      DOCKER_NOTEBOOK_DIR: /home/jovyan/work
   worker:
     # build:
     #   context: ./worker
@@ -83,5 +90,4 @@ volumes:
 
 networks:
   jupyterhub-network:
-    driver: overlay
-    attachable: true
+    name: jupyterhub-network
