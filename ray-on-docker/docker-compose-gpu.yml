@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  ray_worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    depends_on:
+      - ray_head
+    command: >
+      /bin/bash -c "RAY_USE_MULTIPROCESSING_CPU_COUNT=1 ray start --address=192.168.100.174:6379 --num-gpus=1 && tail -f /dev/null"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - RAY_USE_MULTIPROCESSING_CPU_COUNT=1
+    shm_size: 2gb
