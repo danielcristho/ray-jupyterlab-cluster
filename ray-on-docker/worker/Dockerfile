@@ -1,19 +1,18 @@
-# Base image
-FROM python:3.9-slim
+FROM python:3.10-slim
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Jupyter and Ray
-RUN pip install jupyterlab notebook ray[default]
+WORKDIR /ray
 
-# Expose Jupyter ports
+COPY requirements.txt /ray/
+
+RUN pip install -r requirements.txt
+
 EXPOSE 8888
 
-# Expose Ray ports (for head node)
 EXPOSE 6379 10001 8265
 
 # Start Jupyter Notebook
