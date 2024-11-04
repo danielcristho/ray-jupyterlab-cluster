@@ -19,5 +19,5 @@ helm uninstall kuberay-operator
 kubectl get pods
 # No resources found in default namespace.
 
-# [Step 6.3]: Delete the Kubernetes cluster
+# [Step 6.3]: Delete the Kubernetes clusteri
 kind delete cluster
