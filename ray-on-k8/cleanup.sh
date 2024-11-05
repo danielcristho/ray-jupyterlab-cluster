@@ -19,5 +19,8 @@ helm uninstall kuberay-operator
 kubectl get pods
 # No resources found in default namespace.
 
-# [Step 6.3]: Delete the Kubernetes clusteri
-kind delete cluster
+# # [Step 6.3]: Delete the Kubernetes clusteri
+# kind delete cluster
+
+kubectl delete -f ray_job.yml
+kubectl delete -f kuberay/ray-operator/config/samples/ray-cluster.embed-grafana.yaml
