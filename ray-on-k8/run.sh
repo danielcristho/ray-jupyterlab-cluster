@@ -1,6 +1,20 @@
 #!/bin/bash
 
-# Download Kuberay repo
+# cek minikube
+minikube_status=$(minikube status --format='{{.Host}}')
+if [ "$minikube_status" == "Running" ]; then
+    echo "Minikube is already running."
+else
+    echo "Minikube is not running. Starting Minikube..."
+    minikube start
+    if [ $? -eq 0 ]; then
+        echo "Minikube started successfully."
+    else
+    echo "Failed to start Minikube. Please check for errors."
+    fi
+fi
+
+# clone Kuberay repo
 if [ -d "kuberay" ]; then
     echo "Directory 'kuberay' already exists, skipping clone."
 else
@@ -8,7 +22,7 @@ else
 fi
 
 # Create cluster
-# kind create cluster --image=kindest/node:v1.26.0
+kind create cluster --image=kindest/node:v1.26.0
 
 # Deploy a Kuberay operator
 helm repo add kuberay https://ray-project.github.io/kuberay-helm/

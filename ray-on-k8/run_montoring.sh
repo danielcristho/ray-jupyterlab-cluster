@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # add prometheus
 cd kuberay/ && ./install/prometheus/install.sh
 kubectl get all -n prometheus-system
