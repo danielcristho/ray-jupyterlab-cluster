@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -13,17 +13,17 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /ray
 
-COPY requirements.txt install_monitoring.sh /ray/
+COPY requirements.txt /ray/
 
-RUN chmod 777 install_monitoring.sh
+RUN pip install -r requirements.txt
 
-RUN pip install -r requirements.txt && ./install_monitoring.sh
+RUN ray metrics launch-prometheus
 
 EXPOSE 8888
 
 EXPOSE 6379 10001 8265
 
-EXPOSE 3000 9090
+EXPOSE 9090
 
 CMD ["/bin/bash", "-c", "jupyter lab --ip=0.0.0.0 --allow-root & \
     ray start --head --metrics-export-port=8080 --dashboard-host=0.0.0.0 & \

@@ -14,7 +14,9 @@ services:
       - "6379:6379"
       - "8265:8265"
       - "9090:9090"
-      - "3000:3000"
+      # - "3000:3000"
+    volumes:
+      - ray_data:/tmp/ray
 
   ray_worker:
     build:
@@ -35,3 +37,19 @@ services:
         limits:
           cpus: '1'
           memory: '2g'
+
+  ray_grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    depends_on:
+      - ray_head
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./head/metrics/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+
+volumes:
+  ray_data:
+  grafana_data:

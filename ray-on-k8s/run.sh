@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# cek minikube
+# create cluster using kind
+# kind create cluster --image=kindest/node:v1.26.0
+
+# cek cluster using minikube
 minikube_status=$(minikube status --format='{{.Host}}')
 if [ "$minikube_status" == "Running" ]; then
     echo "Minikube is already running."
@@ -21,19 +24,14 @@ else
     git clone https://github.com/ray-project/kuberay.git
 fi
 
-# Create cluster
-kind create cluster --image=kindest/node:v1.26.0
-
 # Deploy a Kuberay operator
 helm repo add kuberay https://ray-project.github.io/kuberay-helm/
 helm repo update
-helm install kuberay-operator kuberay/kuberay-operator --version 1.0.0
-# helm install kuberay-operator kuberay/kuberay-operator --version 1.2.2
+helm install kuberay-operator kuberay/kuberay-operator --version 1.2.2
 kubectl get pods
 
 # Deploy a ray cluster custom resource
-helm install raycluster kuberay/ray-cluster --version 1.0.0
-# helm install raycluster kuberay/ray-cluster --version 1.2.2
+helm install raycluster kuberay/ray-cluster --version 1.2.2
 kubectl get rayclusters
 kubectl get pods --selector=ray.io/cluster=raycluster-kuberay
 

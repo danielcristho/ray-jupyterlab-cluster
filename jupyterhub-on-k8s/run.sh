@@ -23,4 +23,4 @@ helm repo update
 helm upgrade --cleanup-on-fail --install jupyter-hub jupyterhub/jupyterhub --namespace k8s-jupyter --create-namespace --values config.yaml
 kubectl get pods -n k8s-jupyter
 kubectl get svc -n k8s-jupyter
-minikube service -n jup proxy-public
+minikube service -n k8s-jupyter proxy-public

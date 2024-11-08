@@ -52,41 +52,41 @@ services:
     networks:
       - jupyterhub-network
 
-  prometheus:
-    image: prom/prometheus:latest
-    restart: unless-stopped
-    # container_name: prometheus
-    command:
-      - --storage.tsdb.retention.time=30d
-      - --config.file=/etc/prometheus/prometheus.yml
-    ports:
-      - 9090:9090
-    volumes:
-      - '/proc:/host/proc:ro'
-      - '/sys:/host/sys:ro'
-      - '/:/rootfs:ro'
-      - './admin/prometheus:/etc/prometheus'
-      - prometheus_data:/prometheus
-    networks:
-      - jupyterhub-network
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   restart: unless-stopped
+  #   # container_name: prometheus
+  #   command:
+  #     - --storage.tsdb.retention.time=30d
+  #     - --config.file=/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - 9090:9090
+  #   volumes:
+  #     - '/proc:/host/proc:ro'
+  #     - '/sys:/host/sys:ro'
+  #     - '/:/rootfs:ro'
+  #     - './admin/prometheus:/etc/prometheus'
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - jupyterhub-network
 
-  grafana:
-    image: grafana/grafana:latest
-    # container_name: grafana
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    networks:
-      - jupyterhub-network
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   # container_name: grafana
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - jupyterhub-network
 
 volumes:
   jupyterhub-data:
-  prometheus_data:
-  grafana_data:
+  # prometheus_data:
+  # grafana_data:
 
 networks:
   jupyterhub-network:
