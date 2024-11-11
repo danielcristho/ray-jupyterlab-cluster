@@ -37,7 +37,7 @@ kubectl get pods --selector=ray.io/cluster=raycluster-kuberay
 
 # forwarding ray dashboard
 # kubectl port-forward service/raycluster-kuberay-head-svc 8265:8265
-# kubectl port-forward service/raycluster-kuberay-head-v5bm 8265:8265
+kubectl port-forward service/raycluster-kuberay-head-v5bm 8265:8265
 
 # Deploy ray job
 kubectl apply -f ray_job.yaml
