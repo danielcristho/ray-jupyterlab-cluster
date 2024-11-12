@@ -54,16 +54,29 @@ spec:
                   name: gcs-server
                 - containerPort: 8265 # Ray dashboard
                   name: dashboard
-                - containerPort: 10001
+                - containerPort: 10001 # Ray client
                   name: client
+                - containerPort: 44217
+                  name: as-metrics # autoscaler
+                - containerPort: 44227
+                  name: dash-metrics # dashboard
               resources:
                 limits:
-                  cpu: "2"
+                  cpu: "1"
+                  memory: "4G"
                 requests:
-                  cpu: "200m"
+                  cpu: "1"
+                  memory: "2G"
               volumeMounts:
                 - mountPath: /home/ray/samples
                   name: code-sample
+              env:
+                - name: RAY_GRAFANA_IFRAME_HOST
+                  value: http://127.0.0.1:3000
+                - name: RAY_GRAFANA_HOST
+                  value: http://prometheus-grafana.prometheus-system.svc:80
+                - name: RAY_PROMETHEUS_HOST
+                  value: http://prometheus-kube-prometheus-prometheus.prometheus-system.svc:9090
           volumes:
             # You set volumes at the Pod level, then mount them into containers inside that Pod
             - name: code-sample
@@ -97,9 +110,17 @@ spec:
                       command: [ "/bin/sh","-c","ray stop" ]
                 resources:
                   limits:
-                    cpu: "2"
+                    cpu: "1"
+                    memory: "2G"
                   requests:
-                    cpu: "200m"
+                    cpu: "1"
+                    memory: "2G"
+                volumeMounts:
+                  - mountPath: /tmp/ray
+                    name: ray-logs
+            volumes:
+              - name: ray-logs
+                emptyDir: {}
   # SubmitterPodTemplate is the template for the pod that will run the `ray job submit` command against the RayCluster.
   # If SubmitterPodTemplate is specified, the first container is assumed to be the submitter container.
   # submitterPodTemplate:
